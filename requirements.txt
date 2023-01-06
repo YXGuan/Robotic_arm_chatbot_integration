@@ -1,3 +1,4 @@
 speech_recognition
 pyttsx3
 tkinter
+pyaudio
