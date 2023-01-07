@@ -1,6 +1,7 @@
 import json
 import re  # Regex or regular expression
 import random_responses
+import subprocess
 
 
 # Load JSON data
@@ -52,6 +53,8 @@ def get_response(input_string):
         bot_output = response_data[response_index]
         if bot_output["response_type"] == "action":
             print("----------")
+            print("run Bash Script")
+            subprocess.run(["./execute_Rviz_Python_API_Control_RoboticArm.sh"])
         return bot_output["bot_response"]
 
     return random_responses.random_string()

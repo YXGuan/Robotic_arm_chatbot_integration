@@ -6,6 +6,8 @@ import pyttsx3 as tts
 import sys
 import threading
 import tkinter as tk
+import subprocess
+
 
 #from neuralintents import GenericAssistant
 
@@ -20,17 +22,17 @@ class Assistant:
         self.label = tk.Label(text="aa", font=("Arial", 120, "bold"))
         self.label.pack()
 
-        self.response_data = self.load_json("/home/yuxiang/code/2023/AutoPlow_NLP_ChatBot/Python_Native_Chatbot/bot.json")
+        self.response_data = self.load_json("/home/yuxiang/code/2023/Robotic_arm_chatbot_integration/src/bot.json")
         threading.Thread(target=self.run_assistant).start()
         self.root.mainloop()
 
         # Load JSON data
-    def load_json(file):
+    def load_json(self,file):
         with open(file) as bot_responses:
             print(f"Loaded '{file}' successfully!")
             return json.load(bot_responses)
 
-    def get_response(input_string, response_data):
+    def get_response(self,input_string, response_data):
         split_message = re.split(r'\s+|[,;?!.-]\s*', input_string.lower())
         score_list = []
 
@@ -73,24 +75,27 @@ class Assistant:
             bot_output = response_data[response_index]
             if bot_output["response_type"] == "action":
                 # robotic arm integration
-                print("----------")
+                print("run Bash Script")
+                subprocess.run(["./execute_Rviz_Python_API_Control_RoboticArm.sh"])
                 
             return bot_output["bot_response"]
 
         return random_responses.random_string()
 
-    def run_assistnant(self):
+    def run_assistant(self):
         while True:
-            # Store JSON data
             try:
                 with speech_recognition.Microphone() as mic:
+
+                    # record from mic and convert from audio to text
                     self.recognizer.adjust_for_ambient_nois(mic, duration = 0.2)
                     audio = self.recognizer.listen(mic)
 
                     text = self.recognizer.recognize_google(audio)
                     text = text.lower()
 
-                    if "hey mac" in text:
+                    # Hello is the trigger word, similar to whenever you say "hey Google" will wake up a Google nest
+                    if "hello" in text:
                         self.label.config(fg="red")
                         audio = self.recognizer.listen(mic)
                         text = self.recognizer.recognize_google(audio)
@@ -103,13 +108,16 @@ class Assistant:
                             sys.exit()
                         else:
                             if text is not None:
-                                response = get_response(text, self.response_data)
-                                print("Bot:", response)
+                                BotResponse = self.get_response(text, self.response_data)
+                                print("Bot:", BotResponse)
                                 #response = self.assistant.request()
-                                if response is not None:
-                                    self.speaker.say(response)
+                                if BotResponse is not None:
+                                    self.speaker.say(BotResponse)
                                     self.speaker.runAndWait()
                             self.label.config(fg="black")
+
+            except Exception as error:
+                print(error)
             except:
                 self.label.config(fg="black")
                 continue
